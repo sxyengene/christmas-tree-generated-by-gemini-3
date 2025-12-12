@@ -740,8 +740,8 @@
                 
                 // 检查是否为双击（300ms内的两次点击）
                 if (tapLength < 300 && tapLength > 0) {
-                    // 双击处理 - 随机放大一张照片
-                    focusRandomPhoto();
+                    // 双击处理 - 依次循环放大照片
+                    focusNextPhoto();
                     lastTouchEndTime = 0; // 重置时间，避免三击
                 } else {
                     // 单击处理 - 切换聚拢/炸开状态
@@ -761,8 +761,8 @@
                 
                 // 检查是否为双击（300ms内的两次点击）
                 if (clickLength < 300 && clickLength > 0) {
-                    // 双击处理 - 随机放大一张照片
-                    focusRandomPhoto();
+                    // 双击处理 - 依次循环放大照片
+                    focusNextPhoto();
                     lastClickTime = 0; // 重置时间，避免三击
                 } else {
                     // 单击处理 - 切换聚拢/炸开状态
@@ -791,7 +791,24 @@
                 STATE.focusTarget = photos[Math.floor(Math.random() * photos.length)].mesh;
             }
         }
-
+        
+        // 聚焦下一个照片的函数（循环显示）
+        function focusNextPhoto() {
+            // 设置为聚焦模式并按顺序选择照片
+            STATE.mode = 'FOCUS';
+            const photos = particleSystem.filter(p => p.type === 'PHOTO');
+            if (photos.length) {
+                // 如果还没有选中过照片，选择第一张
+                if (!STATE.focusIndex || STATE.focusIndex < 0 || STATE.focusIndex >= photos.length) {
+                    STATE.focusIndex = 0;
+                } else {
+                    // 循环选择下一张照片
+                    STATE.focusIndex = (STATE.focusIndex + 1) % photos.length;
+                }
+                STATE.focusTarget = photos[STATE.focusIndex].mesh;
+            }
+        }
+        
         function animate() {
             requestAnimationFrame(animate);
             const dt = clock.getDelta();
