@@ -688,8 +688,7 @@
                 }
             });
             
-            // 添加移动端双击支持
-            let lastTap = 0;
+            // 添加移动端支持
             let tapCount = 0;
             let tapTimer = null;
             const canvasContainer = document.getElementById('canvas-container');
@@ -724,6 +723,13 @@
             });
             
             canvasContainer.addEventListener('touchend', (e) => {
+                // 如果有拖拽动作，则不触发点击事件
+                if (Math.abs(e.changedTouches[0].clientX - startX) > 5 || 
+                    Math.abs(e.changedTouches[0].clientY - startY) > 5) {
+                    isDragging = false;
+                    return;
+                }
+                
                 isDragging = false;
                 
                 // 处理点击计数逻辑
@@ -731,16 +737,12 @@
                 
                 if (tapCount === 1) {
                     tapTimer = setTimeout(() => {
-                        // 单击处理
+                        // 单击处理 - 切换聚拢/炸开状态
+                        toggleTreeMode();
                         tapCount = 0;
                     }, 300);
                 } else if (tapCount === 2) {
-                    // 双击处理
-                    clearTimeout(tapTimer);
-                    toggleTreeMode();
-                    tapCount = 0;
-                } else if (tapCount === 3) {
-                    // 三击处理
+                    // 双击处理 - 随机放大一张照片
                     clearTimeout(tapTimer);
                     focusRandomPhoto();
                     tapCount = 0;
@@ -751,12 +753,13 @@
             
             // 添加鼠标事件支持（用于桌面端）
             canvasContainer.addEventListener('click', (e) => {
-                // 单击处理
+                // 单击处理 - 切换聚拢/炸开状态
+                toggleTreeMode();
             });
             
             canvasContainer.addEventListener('dblclick', (e) => {
-                // 双击处理
-                toggleTreeMode();
+                // 双击处理 - 随机放大一张照片
+                focusRandomPhoto();
             });
         }
         
