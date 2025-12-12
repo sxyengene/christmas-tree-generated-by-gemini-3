@@ -689,6 +689,7 @@
             });
             
             // 添加移动端支持
+            let lastTap = 0;
             let tapCount = 0;
             let tapTimer = null;
             const canvasContainer = document.getElementById('canvas-container');
@@ -696,23 +697,27 @@
             // 初始化触摸坐标变量
             let startX = 0, startY = 0;
             let isDragging = false;
+            let lastTouchEndTime = 0;
             
             canvasContainer.addEventListener('touchstart', (e) => {
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
-                isDragging = true;
+                isDragging = false; // 重置拖拽状态
                 e.preventDefault();
             });
             
             canvasContainer.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                
                 if (e.touches.length === 1) {
                     const deltaX = e.touches[0].clientX - startX;
                     const deltaY = e.touches[0].clientY - startY;
                     
+                    // 检测是否开始拖拽（移动超过5像素认为是拖拽）
+                    if (!isDragging && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+                        isDragging = true;
+                    }
+                    
                     // 根据滑动方向和距离更新圣诞树旋转角度
-                    if (STATE.mode === 'SCATTER') {
+                    if (STATE.mode === 'SCATTER' && isDragging) {
                         // 在散开模式下，触摸滑动可以控制视角
                         STATE.rotation.y += deltaX * 0.01;
                         STATE.rotation.x += deltaY * 0.01;
@@ -723,43 +728,47 @@
             });
             
             canvasContainer.addEventListener('touchend', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTouchEndTime;
+                
                 // 如果有拖拽动作，则不触发点击事件
-                if (Math.abs(e.changedTouches[0].clientX - startX) > 5 || 
-                    Math.abs(e.changedTouches[0].clientY - startY) > 5) {
+                if (isDragging) {
                     isDragging = false;
+                    lastTouchEndTime = currentTime;
                     return;
                 }
                 
-                isDragging = false;
-                
-                // 处理点击计数逻辑
-                tapCount++;
-                
-                if (tapCount === 1) {
-                    tapTimer = setTimeout(() => {
-                        // 单击处理 - 切换聚拢/炸开状态
-                        toggleTreeMode();
-                        tapCount = 0;
-                    }, 300);
-                } else if (tapCount === 2) {
+                // 检查是否为双击（300ms内的两次点击）
+                if (tapLength < 300 && tapLength > 0) {
                     // 双击处理 - 随机放大一张照片
-                    clearTimeout(tapTimer);
                     focusRandomPhoto();
-                    tapCount = 0;
+                    lastTouchEndTime = 0; // 重置时间，避免三击
+                } else {
+                    // 单击处理 - 切换聚拢/炸开状态
+                    toggleTreeMode();
+                    lastTouchEndTime = currentTime;
                 }
                 
                 e.preventDefault();
             });
             
             // 添加鼠标事件支持（用于桌面端）
-            canvasContainer.addEventListener('click', (e) => {
-                // 单击处理 - 切换聚拢/炸开状态
-                toggleTreeMode();
-            });
+            let lastClickTime = 0;
             
-            canvasContainer.addEventListener('dblclick', (e) => {
-                // 双击处理 - 随机放大一张照片
-                focusRandomPhoto();
+            canvasContainer.addEventListener('click', (e) => {
+                const currentTime = new Date().getTime();
+                const clickLength = currentTime - lastClickTime;
+                
+                // 检查是否为双击（300ms内的两次点击）
+                if (clickLength < 300 && clickLength > 0) {
+                    // 双击处理 - 随机放大一张照片
+                    focusRandomPhoto();
+                    lastClickTime = 0; // 重置时间，避免三击
+                } else {
+                    // 单击处理 - 切换聚拢/炸开状态
+                    toggleTreeMode();
+                    lastClickTime = currentTime;
+                }
             });
         }
         
