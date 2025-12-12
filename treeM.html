@@ -694,6 +694,10 @@
             let tapTimer = null;
             const canvasContainer = document.getElementById('canvas-container');
             
+            // 初始化触摸坐标变量
+            let startX = 0, startY = 0;
+            let isDragging = false;
+            
             canvasContainer.addEventListener('touchstart', (e) => {
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
@@ -743,6 +747,16 @@
                 }
                 
                 e.preventDefault();
+            });
+            
+            // 添加鼠标事件支持（用于桌面端）
+            canvasContainer.addEventListener('click', (e) => {
+                // 单击处理
+            });
+            
+            canvasContainer.addEventListener('dblclick', (e) => {
+                // 双击处理
+                toggleTreeMode();
             });
         }
         
